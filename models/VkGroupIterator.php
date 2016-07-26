@@ -51,7 +51,6 @@ class VkGroupIterator implements Iterator
     public function current()
     {
         return $this->_data;
-
     }
 
     /**
