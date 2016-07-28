@@ -29,7 +29,15 @@ class IndexController
 
         $groupModel = new Group();
 
-        return $groupModel->getList();
+        $dateStart = !empty($_GET['dateStart']) ? $_GET['dateStart'] : NULL ;
+        $dateEnd = !empty($_GET['dateEnd']) ? $_GET['dateEnd'] : NULL ;
+
+        if (!$dateEnd && !$dateStart)
+        {
+            return [];
+        }
+
+        return $groupModel->getList($dateStart, $dateEnd);
     }
 
     /**

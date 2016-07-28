@@ -1,9 +1,9 @@
 <?php
-
 require_once 'config.php';
 
-switch ($_SERVER['REQUEST_URI'])
+switch (substr($_SERVER['REQUEST_URI'],0,strpos($_SERVER['REQUEST_URI'],'?')))
 {
+    case '':
     case '/':
         require PATH_TO_CONTROLLER . 'IndexController.php';
         $controller = new IndexController();

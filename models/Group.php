@@ -25,7 +25,7 @@ class Group
 
         $dsn = 'mysql:host=' . DB_HOST . ';dbname=' .DB_NAME .';charset=' .DB_CHARSET;
 
-        return new \PDO($dsn, 'root', 'web', $opt);
+        return new \PDO($dsn, DB_USER, DB_PASSWORD, $opt);
     }
 
     /**
@@ -100,42 +100,23 @@ class Group
      */
     private function _updateDb($groupList)
     {
-        $prepareUpdate = $this
-            ->_getPdo()
-            ->prepare('UPDATE group_user SET
-                    count_user = :countUser,
-                    count_user_online = :countUserOnline,
-                    count_user_offline = :countUserOffline
-                    WHERE group_id = :groupId')
-        ;
-
         $prepareInsert = $this
             ->_getPdo()
             ->prepare('INSERT INTO group_user
-                (group_id, count_user, count_user_online, count_user_offline)
+                (group_id, count_user, count_user_online, count_user_offline, date_insert)
                 VALUES
-                (:groupId, :countUser, :countUserOnline, :countUserOffline)')
+                (:groupId, :countUser, :countUserOnline, :countUserOffline, :dateInsert)')
        ;
 
         foreach ($groupList as $group)
         {
-            $bExists = $this->_getPdo()->query('SELECT 1 from group_user WHERE group_id = ' . $group['id'])->fetchColumn();
-
-            if ($bExists)
-            {
-                $prepare = $prepareUpdate;
-            }
-            else
-            {
-                $prepare = $prepareInsert;
-            }
-
-            $prepare
+            $prepareInsert
                 ->execute([
                     ':groupId' => $group['id'],
                     ':countUser' => count($group['users']),
                     ':countUserOnline' => count($group['usersOnline']),
                     ':countUserOffline' => count($group['usersOffline']),
+                    ':dateInsert'       => date('Y-m-d H:i:s')
                 ])
             ;
         }
@@ -155,8 +136,12 @@ class Group
     /**
      * получает данные о группах из бд
      */
-    public function getList()
+    public function getList($dateStart = NULL, $dateEnd = NULL)
     {
+        $where = ' WHERE date_insert < "' . (empty($dateEnd) ? date('Y-m-d H:i:s') : $dateEnd) . '"'
+                . ' AND date_insert > "' . (empty($dateStart) ? date('Y-m-d H:i:s', 0) : $dateStart) . '"'
+        ;
+
         return $this
             ->_getPdo()
             ->query('SELECT
@@ -164,11 +149,12 @@ class Group
                     g.description,
                     gu.count_user_online,
                     gu.count_user_offline,
-                    gu.count_user
+                    gu.count_user,
+                    gu.date_insert
                 FROM `groups` AS g
                 LEFT JOIN group_user AS gu ON g.id = gu.group_id
-            ')
-            ->fetchAll()
+            ' . $where . ' ORDER BY gu.date_insert')
+            ->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_GROUP)
         ;
     }
 

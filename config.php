@@ -11,5 +11,6 @@ define("PATH_TO_MODELS", '/var/www/test/models/');
 
 define("DB_HOST", 'mysql');
 define("DB_NAME", 'test');
+define("DB_USER", 'root');
 define("DB_PASSWORD", 'web');
 define("DB_CHARSET", 'UTF8');
